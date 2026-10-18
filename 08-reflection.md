@@ -1,0 +1,19 @@
+[Back to index](../README.md)
+
+# 8. Reflection
+
+## 8.1 What I got wrong and how I fixed it
+
+Forgetting to subtract two addresses. When I first calculated how many hosts a subnet could hold, I used 2^h and forgot that two addresses are reserved. A /27 has 5 host bits, so 2^5 = 32 addresses, but only 30 are usable, because the all-zeros address is the network address and the all-ones address is the broadcast address. I only noticed when I checked my answers with a subnet calculator and saw that its usable host counts were consistently two lower than mine. Working out why, by writing the network and broadcast addresses for each subnet in binary, showed me those two addresses can't be given to devices. The mistake matters because it makes subnets look bigger than they are: sizing a subnet for exactly 32 hosts would leave two devices with nowhere to go, and a /30 would look like it had 4 hosts when it has only 2, which is exactly why it suits a point-to-point link. Now I do the arithmetic by hand first, write the network address, broadcast address and usable range for every subnet, and use the calculator as a second check rather than a source of answers.
+
+Underestimating what stateless and stateful mean. At first I treated the difference between stateless and stateful filtering as a definition to remember, and I missed its consequences. A stateless filter judges every packet on its own, so it needs a separate rule to let replies back in, and that usually means leaving a wide range of ports open to any traffic that looks like a reply. A stateful firewall remembers connections, so replies to a connection started from the inside are allowed automatically and unsolicited traffic is dropped. What made it click was writing the rule tables in section 5 and tracing a single web request and its reply through each type, and seeing how much more I had to open up under a stateless filter. It also changed how I think about security: a stateless rule set can be correct on paper and still be far too permissive. Now, whenever I read a firewall rule, I ask whether it covers return traffic and whether the firewall tracks state.
+
+## 8.2 What I would explore next
+
+Zero trust and least-privilege segmentation. The area I most want to explore next is zero trust: the idea that a device or user should not be trusted just because it is inside the network, and that every request should be verified and given only the access it needs (least privilege). This project introduced the groundwork. Segmenting the network into VLANs and subnets, writing default-deny firewall rules, keeping the DMZ from reaching internal zones, and limiting VPN users to internal web applications on a single port (rule 6 in 5.4) are all least-privilege decisions. But they are decisions based mostly on network location: a device on the Staff VLAN is allowed to do whatever the Staff rules permit, whoever is using it and whatever state it is in. Zero trust goes further, and I want to understand how.
+
+Specifically, I'd like to look at three things. First, microsegmentation, which applies the same logic inside a segment, so that two servers in the same VLAN cannot reach each other unless a rule says they can, limiting how far an attacker can move once inside. Second, identity-based access, where rules depend on who or what is connecting and the health of the device, not just its IP address, and how this compares with a traditional VPN that gives a remote worker access to a whole subnet. Third, how these ideas are written down in practice, starting with NIST SP 800-207 (Zero Trust Architecture) and the NCSC's zero trust design principles, so I can compare my network design against a recognised standard and find the gaps.
+
+---
+
+[Previous: 7. Self-test](07-self-test.md) | [Next: 9. References](09-references.md) | [Index](../README.md)
